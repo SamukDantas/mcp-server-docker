@@ -28,20 +28,17 @@ def docker_to_dict(
     if isinstance(obj, Container):
         config: dict[str, Any] = obj.attrs.get("Config") or {}
 
-        # Get image info safely - avoid resolving image by ID which can fail
-        # for images with incomplete SHA256 IDs
-        image_info = None
-        if obj.image:
-            try:
-                image_info = docker_to_dict(obj.image)
-            except Exception:
-                # Fallback to basic image info from container attrs
-                image_data = obj.attrs.get("Image", "")
-                image_info = {
-                    "id": image_data,
-                    "tags": [],
-                    "short_id": image_data[:12] if image_data else "unknown",
-                }
+        # Get image info from container attrs only - avoid accessing obj.image
+        # as it tries to resolve the image and can fail for incomplete SHA256 IDs
+        image_data = obj.attrs.get("Image", "")
+        if image_data:
+            image_info = {
+                "id": image_data,
+                "tags": [],
+                "short_id": image_data[:12] if len(image_data) >= 12 else image_data,
+            }
+        else:
+            image_info = None
 
         result = {
             "id": obj.id,
