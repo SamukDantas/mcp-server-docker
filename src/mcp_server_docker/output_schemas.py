@@ -40,12 +40,16 @@ def docker_to_dict(
         else:
             image_info = None
 
+        # Get status from State attribute for accurate status
+        state = obj.attrs.get("State", {})
+        status = state.get("Status", obj.status)
+
         result = {
             "id": obj.id,
             "name": obj.name,
             "short_id": obj.short_id,
             "image": image_info,
-            "status": obj.status,
+            "status": status,
             "labels": config.get("Labels", {}),
             "ports": obj.ports,
             "created": obj.attrs.get("Created"),
