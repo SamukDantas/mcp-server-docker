@@ -356,16 +356,25 @@ async def call_tool(
 
         elif name == "create_container":
             args = CreateContainerInput(**arguments)
-            container = _docker.containers.create(**args.model_dump())
+            model_dump = args.model_dump()
+            detach = model_dump.pop("detach", True)
+            container = _docker.containers.create(**model_dump)
+            if detach:
+                container.start()
             result = docker_to_dict(container)
 
         elif name == "run_container":
             args = CreateContainerInput(**arguments)
-            container = _docker.containers.run(**args.model_dump())
+            model_dump = args.model_dump()
+            detach = model_dump.pop("detach", True)
+            container = _docker.containers.run(**model_dump)
+            if detach:
+                container.start()
             result = docker_to_dict(container)
 
         elif name == "recreate_container":
             args = RecreateContainerInput(**arguments)
+            detach = arguments.get("detach", True)
 
             container = _docker.containers.get(args.resolved_container_id)
             container.stop()
@@ -373,6 +382,8 @@ async def call_tool(
 
             run_args = CreateContainerInput(**arguments)
             container = _docker.containers.run(**run_args.model_dump())
+            if detach:
+                container.start()
             result = docker_to_dict(container)
 
         elif name == "start_container":
